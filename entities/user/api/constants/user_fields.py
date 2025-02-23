@@ -15,5 +15,5 @@ fields = [
 
 primary_fields = [
             "id","domain", "photo_max_orig", "first_name",
-            "last_name"
+            "last_name", "bdate", "city", "sex"
         ]

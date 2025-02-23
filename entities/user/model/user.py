@@ -22,6 +22,8 @@ class User:
     city: City
     education: Education
     country: Country
+    sex: int
+    home_town: str
 
     career: list[Career]
     can_post: int
@@ -47,6 +49,8 @@ class User:
             bdate = data.get('bdate'),
             books = data.get('books'),
             can_post = data.get('can_post'),
+            sex = data.get('sex'),
+            home_town = data.get('home_town')
         )
 
     def to_json(self) -> dict:
