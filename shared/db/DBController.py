@@ -1,5 +1,7 @@
 import json
 import aiosqlite
+import pickle
+
 
 from entities.customer.model.customer import Customer
 from shared.db.dbconfig import DB, C, T
@@ -25,7 +27,7 @@ class DBController:
            ''')
             await connection.execute(f'''
                  CREATE TABLE IF NOT EXISTS {T.history} (
-                     {C.id} TEXT PRIMARY KEY,
+                     {C.id} TEXT,
                      {C.query_data} BLOB
                  )
              ''')
@@ -42,6 +44,33 @@ class DBController:
             if row:
                 return Customer(*row)
             return None
+
+    async def add_graph_to_history(self, customer_id: str, graph):
+        data = pickle.dumps(graph)
+
+        async with aiosqlite.connect(self.database_path) as connection:
+            await connection.execute(f'''
+                INSERT INTO history 
+                ({C.id}, {C.query_data}) 
+                VALUES (?, ?)
+            ''', (customer_id, data))
+            await connection.commit()
+        return True
+
+    async def get_graph_history(self, customer_id: str):
+        async with aiosqlite.connect(self.database_path) as connection:
+            cursor = await connection.execute(f'''
+                   SELECT * from {T.history} WHERE {C.id} == '{customer_id}'
+                       ''')
+            row = await cursor.fetchall()
+            await connection.commit()
+            if row:
+                res = []
+                for t in row:
+                    res.append(pickle.loads(t[1]))
+                return res
+            return None
+
 
     async def add_customer(self, customer: Customer):
         user_in_db = await self.check_customer(customer.login)

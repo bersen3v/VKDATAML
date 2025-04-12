@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import networkx as nx
@@ -13,24 +14,31 @@ from entities.user.methods.friends_binary_search import friends_binary_search
 from entities.user.methods.get_friends_list import get_friends_list
 from entities.user.methods.get_user_model_by_id import get_user_model_by_id
 from entities.user.model.user import User
+from shared.db.DBController import db_controller
 
 def get_networkx_graph_as_json(graph: Graph):
     data = json_graph.node_link_data(graph, link='edges')
     frontend_graph = {"nodes": data['nodes'], "links": data['edges']}
     return frontend_graph
 
-def create_graph_async(object_id: int | str, users_list: list[User], count: int = 5000):
+def create_graph_async(customer_id: str, object_id: int | str, users_list: list[User], count: int = 5000):
+    saved = False
     graph = nx.Graph()
     prev_graph = graph
     process = 0
     for user in users_list:
         process+=1
+
+        if process >= 5 and not saved:
+            json_graph_1 = get_networkx_graph_as_json(graph)
+            asyncio.run(db_controller.add_graph_to_history(customer_id, json_graph_1))
+            saved = True
+
         print(f"{process} / {len(users_list)}")
         graph = add_user_to_graph_async(graph=graph, user=user ,users_list=users_list, count=count)
         # if not graph.add_edge(user.id, user_friend.id):
         #     graph.add_edge(user.id, user_friend.id)
         diff_graph = nx.difference(graph, prev_graph)
-        print(diff_graph)
         prev_graph = graph
         json_graph = get_networkx_graph_as_json(graph)
         yield json.dumps(json_graph)
