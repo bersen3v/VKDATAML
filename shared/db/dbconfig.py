@@ -11,5 +11,8 @@ class C:
     login = "login"
     password = "password"
     query_data = "query_data"
+    trace = "trace"
+    vk_username = "vk_username"
+    photo = "photo"
 
 

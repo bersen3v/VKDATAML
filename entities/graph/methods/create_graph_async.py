@@ -1,5 +1,6 @@
 import asyncio
 import json
+import uuid
 
 import networkx as nx
 from networkx.classes import Graph
@@ -22,6 +23,7 @@ def get_networkx_graph_as_json(graph: Graph):
     return frontend_graph
 
 def create_graph_async(customer_id: str, object_id: int | str, users_list: list[User], count: int = 5000):
+    trace = uuid.uuid4()
     saved = False
     graph = nx.Graph()
     prev_graph = graph
@@ -29,10 +31,8 @@ def create_graph_async(customer_id: str, object_id: int | str, users_list: list[
     for user in users_list:
         process+=1
 
-        if process >= 5 and not saved:
-            json_graph_1 = get_networkx_graph_as_json(graph)
-            asyncio.run(db_controller.add_graph_to_history(customer_id, json_graph_1))
-            saved = True
+        json_graph_1 = get_networkx_graph_as_json(graph)
+        asyncio.run(db_controller.add_graph_to_history(trace, customer_id, object_id, json_graph_1))
 
         print(f"{process} / {len(users_list)}")
         graph = add_user_to_graph_async(graph=graph, user=user ,users_list=users_list, count=count)
